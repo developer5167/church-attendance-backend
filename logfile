@@ -1,0 +1,56 @@
+2025-12-19 21:46:39.921 IST [42992] FATAL:  lock file "postmaster.pid" already exists
+2025-12-19 21:46:39.921 IST [42992] HINT:  Is another postmaster (PID 3992) running in data directory "/usr/local/var/postgres@14"?
+2025-12-19 21:46:48.509 IST [43128] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2025-12-19 21:46:48.513 IST [43128] LOG:  listening on IPv6 address "::1", port 5432
+2025-12-19 21:46:48.513 IST [43128] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-12-19 21:46:48.513 IST [43128] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-12-19 21:46:48.534 IST [43129] LOG:  database system was shut down at 2025-12-19 21:46:46 IST
+2025-12-19 21:46:48.543 IST [43128] LOG:  database system is ready to accept connections
+2025-12-19 21:50:42.910 IST [43218] ERROR:  relation "admins" does not exist
+2025-12-19 21:50:42.910 IST [43218] STATEMENT:  ALTER TABLE admins
+	ADD COLUMN church_id UUID REFERENCES churches(id);
+2025-12-19 21:51:00.478 IST [43218] ERROR:  relation "members" does not exist
+2025-12-19 21:51:00.478 IST [43218] STATEMENT:  CREATE TABLE registrations (
+	  id UUID PRIMARY KEY,
+	  member_id UUID REFERENCES members(id),
+	  service_id UUID REFERENCES services(id),
+	  submitted_at TIMESTAMP DEFAULT NOW(),
+	  UNIQUE (member_id, service_id)
+	);
+2025-12-19 21:52:43.048 IST [43218] ERROR:  syntax error at or near "]" at character 1
+2025-12-19 21:52:43.048 IST [43218] STATEMENT:  ]
+	ALTER TABLE admins
+	ADD COLUMN church_id UUID REFERENCES churches(id);
+2025-12-19 21:54:04.552 IST [43218] ERROR:  column "church_id" of relation "admins" already exists
+2025-12-19 21:54:04.552 IST [43218] STATEMENT:  ALTER TABLE admins
+	ADD COLUMN church_id UUID REFERENCES churches(id);
+2025-12-19 22:25:43.173 IST [46331] ERROR:  relation "members" does not exist
+2025-12-19 22:25:43.173 IST [46331] STATEMENT:  ALTER TABLE members
+	ADD COLUMN coming_from VARCHAR(100),
+	ADD COLUMN member_type VARCHAR(20), 
+	ADD COLUMN attending_with VARCHAR(20), 
+	ADD COLUMN since_year INT;
+2025-12-19 22:27:26.225 IST [46331] FATAL:  terminating connection due to administrator command
+2025-12-19 22:27:29.873 IST [46464] ERROR:  current database cannot be renamed
+2025-12-19 22:27:29.873 IST [46464] STATEMENT:  ALTER DATABASE postgres RENAME TO church_attendence_db;
+2025-12-19 22:28:32.217 IST [46510] ERROR:  syntax error at end of input at character 54
+2025-12-19 22:28:32.217 IST [46510] STATEMENT:  CREATE DATABASE church_attendence_db;
+	CREATE DATABASE
+2025-12-19 22:29:37.808 IST [46535] ERROR:  relation "events" does not exist
+2025-12-19 22:29:37.808 IST [46535] STATEMENT:  CREATE TABLE services (
+	  id UUID PRIMARY KEY,
+	  event_id UUID REFERENCES events(id),
+	  service_code VARCHAR(20),
+	  service_time TIME NOT NULL,
+	  qr_token TEXT UNIQUE NOT NULL,
+	  is_active BOOLEAN DEFAULT true,
+	  created_at TIMESTAMP DEFAULT NOW()
+	);
+2025-12-19 22:30:12.036 IST [46535] ERROR:  relation "members" does not exist
+2025-12-19 22:30:12.036 IST [46535] STATEMENT:  CREATE TABLE registrations (
+	  id UUID PRIMARY KEY,
+	  member_id UUID REFERENCES members(id),
+	  service_id UUID REFERENCES services(id),
+	  submitted_at TIMESTAMP DEFAULT NOW(),
+	  UNIQUE (member_id, service_id)
+	);
