@@ -1,3 +1,4 @@
 exports.generateOtp = () => {
-  return '123456'; // TEMP — replace with real OTP later
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
+

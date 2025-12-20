@@ -8,6 +8,7 @@ router.post('/login', adminController.login);
 router.post('/event', auth, adminController.createEvent);
 router.post('/service', auth, adminController.createService);
 router.get('/events', auth, adminController.listEvents);
+router.get('/events/by-date', auth, adminController.listEventsByDate);
 router.get('/services/:eventId', auth, adminController.listServices);
 router.get('/attendance/service/:serviceId', auth, adminController.attendanceByService);
 router.get('/attendance/event/:eventId', auth, adminController.attendanceByEvent);

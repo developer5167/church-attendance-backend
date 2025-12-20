@@ -54,3 +54,54 @@
 	  submitted_at TIMESTAMP DEFAULT NOW(),
 	  UNIQUE (member_id, service_id)
 	);
+2025-12-20 00:17:46.040 IST [43128] LOG:  received smart shutdown request
+2025-12-20 00:17:46.040 IST [43128] LOG:  background worker "logical replication launcher" (PID 43135) exited with exit code 1
+2025-12-20 00:17:46.040 IST [43130] LOG:  shutting down
+2025-12-20 00:17:46.053 IST [43128] LOG:  database system is shut down
+2025-12-20 19:26:03.388 IST [3001] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2025-12-20 19:26:03.390 IST [3001] LOG:  listening on IPv6 address "::1", port 5432
+2025-12-20 19:26:03.390 IST [3001] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-12-20 19:26:03.390 IST [3001] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-12-20 19:26:03.410 IST [3002] LOG:  database system was shut down at 2025-12-20 00:17:46 IST
+2025-12-20 19:26:03.418 IST [3001] LOG:  database system is ready to accept connections
+2025-12-20 20:36:26.325 IST [5510] ERROR:  update or delete on table "events" violates foreign key constraint "services_event_id_fkey" on table "services"
+2025-12-20 20:36:26.325 IST [5510] DETAIL:  Key (id)=(d34cfd52-2ca4-4129-8f31-2f995e88c5d8) is still referenced from table "services".
+2025-12-20 20:36:26.325 IST [5510] STATEMENT:  delete from events
+	
+2025-12-20 21:01:55.238 IST [12612] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2025-12-20 21:01:55.238 IST [12612] DETAIL:  Key (member_id, service_id)=(5d25ad4b-8f81-4bfa-8590-815eadd54bae, 6dc110cd-d73a-4bf1-b913-1790f6aa7e48) already exists.
+2025-12-20 21:01:55.238 IST [12612] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2025-12-20 21:03:42.428 IST [12766] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2025-12-20 21:03:42.428 IST [12766] DETAIL:  Key (member_id, service_id)=(5d25ad4b-8f81-4bfa-8590-815eadd54bae, 6dc110cd-d73a-4bf1-b913-1790f6aa7e48) already exists.
+2025-12-20 21:03:42.428 IST [12766] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2025-12-20 21:04:40.349 IST [12844] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2025-12-20 21:04:40.349 IST [12844] DETAIL:  Key (member_id, service_id)=(5d25ad4b-8f81-4bfa-8590-815eadd54bae, 6dc110cd-d73a-4bf1-b913-1790f6aa7e48) already exists.
+2025-12-20 21:04:40.349 IST [12844] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2025-12-20 21:20:52.410 IST [14008] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2025-12-20 21:20:52.410 IST [14008] DETAIL:  Key (member_id, service_id)=(5d25ad4b-8f81-4bfa-8590-815eadd54bae, 6dc110cd-d73a-4bf1-b913-1790f6aa7e48) already exists.
+2025-12-20 21:20:52.410 IST [14008] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2025-12-20 23:17:45.161 IST [27604] ERROR:  invalid input syntax for type date: "$y-$m-$day"
+2025-12-20 23:17:45.161 IST [27604] CONTEXT:  unnamed portal parameter $2 = '...'
+2025-12-20 23:17:45.161 IST [27604] STATEMENT:  SELECT 
+	        e.id,
+	        e.name,
+	        to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+	        COALESCE(
+	          json_agg(
+	            json_build_object(
+	                  'id', s.id,
+	                  'service_code', s.service_code,
+	                  'service_time', s.service_time,
+	                  'qr_token', s.qr_token
+	                ) ORDER BY s.service_time
+	          ) FILTER (WHERE s.id IS NOT NULL), '[]') AS services
+	     FROM events e
+	     LEFT JOIN services s ON s.event_id = e.id
+	     WHERE e.church_id = $1
+	       AND e.event_date::date = $2::date
+	     GROUP BY e.id
+	     ORDER BY e.event_date DESC

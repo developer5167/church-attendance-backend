@@ -1,6 +1,7 @@
 const pool = require('../db');
 const bcrypt = require('bcrypt');
 const { v4: uuid } = require('uuid');
+const crypto = require('crypto');
 
 const jwt = require('../utils/jwt');
 
@@ -17,7 +18,9 @@ exports.login = async (req, res) => {
   }
 
   const admin = result.rows[0];
-  const isMatch = await bcrypt.compare(password, admin.password_hash);
+  // const isMatch = await bcrypt.compare(password, admin.password_hash);
+  const isMatch = admin.password_hash === password; // TEMP: plain text password check
+
 
   if (!isMatch) {
     return res.status(401).json({ message: 'Invalid credentials' });
@@ -67,14 +70,105 @@ exports.listEvents = async (req, res) => {
   const churchId = req.user.churchId;
 
   const result = await pool.query(
-    `SELECT id, name, event_date
-     FROM events
-     WHERE church_id = $1
-     ORDER BY event_date DESC`,
+    `SELECT 
+        e.id,
+        e.name,
+        to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+        COALESCE(
+          json_agg(
+            json_build_object(
+                  'id', s.id,
+                  'service_code', s.service_code,
+                  'service_time', s.service_time,
+                  'qr_token', s.qr_token
+                ) ORDER BY s.service_time
+          ) FILTER (WHERE s.id IS NOT NULL), '[]') AS services
+     FROM events e
+     LEFT JOIN services s ON s.event_id = e.id
+     WHERE e.church_id = $1
+     GROUP BY e.id
+     ORDER BY e.event_date DESC`,
     [churchId]
   );
 
-  res.json(result.rows);
+  const baseUrl = process.env.BASE_URL || '';
+
+  const events = result.rows.map((e) => {
+    // ensure services is an array
+    const services = Array.isArray(e.services) ? e.services : [];
+
+    e.services = services.map((s) => {
+      // if qr_token present, build qrUrl
+      if (s && s.qr_token) {
+        return {
+          id: s.id,
+          service_code: s.service_code,
+          service_time: s.service_time,
+          qrUrl: `${baseUrl}/api/register/metadata?token=${s.qr_token}`,
+        };
+      }
+
+      return s;
+    });
+
+    return e;
+  });
+
+  res.json(events);
+};
+exports.listEventsByDate = async (req, res) => {
+  const churchId = req.user.churchId;
+  const { date } = req.query; // expected format: YYYY-MM-DD
+
+  if (!date) {
+    return res.status(400).json({ message: 'Missing date parameter' });
+  }
+
+  const result = await pool.query(
+    `SELECT 
+        e.id,
+        e.name,
+        to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+        COALESCE(
+          json_agg(
+            json_build_object(
+                  'id', s.id,
+                  'service_code', s.service_code,
+                  'service_time', s.service_time,
+                  'qr_token', s.qr_token
+                ) ORDER BY s.service_time
+          ) FILTER (WHERE s.id IS NOT NULL), '[]') AS services
+     FROM events e
+     LEFT JOIN services s ON s.event_id = e.id
+     WHERE e.church_id = $1
+       AND e.event_date::date = $2::date
+     GROUP BY e.id
+     ORDER BY e.event_date DESC`,
+    [churchId, date]
+  );
+
+  const baseUrl = process.env.BASE_URL || '';
+
+  const events = result.rows.map((e) => {
+    const services = Array.isArray(e.services) ? e.services : [];
+
+    e.services = services.map((s) => {
+      if (s && s.qr_token) {
+        return {
+          id: s.id,
+          service_code: s.service_code,
+          service_time: s.service_time,
+          qrUrl: `${baseUrl}/api/register/metadata?token=${s.qr_token}`,
+        };
+      }
+
+      return s;
+    });
+
+    return e;
+  });
+
+  res.json(events);
 };
 exports.listServices = async (req, res) => {
   const { eventId } = req.params;

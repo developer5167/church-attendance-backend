@@ -1,6 +1,7 @@
 const pool = require("../db");
 const jwt = require("../utils/jwt");
 const otpUtil = require("../utils/otp");
+const { v4: uuid } = require("uuid");
 
 exports.sendOtp = async (req, res) => {
   const { phone } = req.body;
@@ -48,7 +49,7 @@ exports.getRegisterMetadata = async (req, res) => {
         s.event_id,
         s.service_time,
         e.name,
-        e.event_date
+        to_char(e.event_date, 'YYYY-MM-DD') AS event_date
      FROM services s
      JOIN events e ON s.event_id = e.id
      WHERE s.qr_token = $1
@@ -153,8 +154,6 @@ exports.getProfile = async (req, res) => {
 
   res.json(result.rows[0]);
 };
-const { v4: uuid } = require("uuid");
-const otpUtil = require("../utils/otp");
 
 exports.sendOtp = async (req, res) => {
   const { phone } = req.body;
