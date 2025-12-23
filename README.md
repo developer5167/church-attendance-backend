@@ -25,3 +25,25 @@ Response example (each event includes `services` array):
 ```
 
 ``` 
+
+## Delete Event (admin)
+
+Delete an event only when there are no attendees registered for any of its services.
+
+- Endpoint: `DELETE /api/admin/event/:eventId`
+- Auth: Bearer token (admin)
+
+Responses:
+- `200` - `{ message: "Event deleted" }`
+- `400` - `{ message: "Can't delete event: attendees exist" }` (when attendees exist)
+- `404` - `{ message: 'Event not found' }` (not found or not authorized)
+
+Example cURL:
+
+```bash
+curl -X DELETE \
+	-H "Authorization: Bearer <ADMIN_TOKEN>" \
+	https://your-base-url/api/admin/event/<EVENT_ID>
+```
+
+Ensure the admin token belongs to the same `church_id` as the event.

@@ -45,9 +45,10 @@ exports.getRegisterMetadata = async (req, res) => {
 
   const result = await pool.query(
     `SELECT 
-        s.id AS service_id,
-        s.event_id,
-        s.service_time,
+      s.id AS service_id,
+      s.event_id,
+      s.service_code,
+      s.service_time,
         e.name,
         to_char(e.event_date, 'YYYY-MM-DD') AS event_date
      FROM services s
@@ -107,6 +108,7 @@ exports.getRegisterMetadata = async (req, res) => {
     serviceId: service.service_id,
     eventName: service.name,
     serviceTime: service.service_time,
+    serviceCode: service.service_code,
     eventDate: service.event_date,
   });
 };

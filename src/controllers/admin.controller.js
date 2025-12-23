@@ -252,4 +252,63 @@ exports.exportAttendanceCSV = async (req, res) => {
   res.send(csv);
 };
 
+// Delete an event only if there are no attendees registered for any of its services
+exports.deleteEvent = async (req, res) => {
+  const { eventId } = req.params;
+  const churchId = req.user.churchId;
+
+  // Ensure event belongs to the admin's church
+  const eventCheck = await pool.query(
+    'SELECT id FROM events WHERE id = $1 AND church_id = $2',
+    [eventId, churchId]
+  );
+
+  if (eventCheck.rows.length === 0) {
+    return res.status(404).json({ message: 'Event not found' });
+  }
+
+  // Check if there are any registrations for services under this event
+  const regCount = await pool.query(
+    `SELECT COUNT(r.id) AS cnt
+     FROM services s
+     JOIN registrations r ON r.service_id = s.id
+     WHERE s.event_id = $1`,
+    [eventId]
+  );
+
+  const count = parseInt(regCount.rows[0].cnt, 10) || 0;
+
+  if (count > 0) {
+    return res.status(400).json({ message: "Can't delete event: attendees exist" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Delete services for the event (if any)
+    await client.query('DELETE FROM services WHERE event_id = $1', [eventId]);
+
+    // Delete the event
+    const delRes = await client.query(
+      'DELETE FROM events WHERE id = $1 AND church_id = $2 RETURNING id',
+      [eventId, churchId]
+    );
+
+    await client.query('COMMIT');
+
+    if (delRes.rowCount === 0) {
+      return res.status(404).json({ message: 'Event not found or not authorized' });
+    }
+
+    return res.json({ message: 'Event deleted' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting event:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+};
+
 

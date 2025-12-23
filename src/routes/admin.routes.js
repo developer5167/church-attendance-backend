@@ -13,4 +13,5 @@ router.get('/services/:eventId', auth, adminController.listServices);
 router.get('/attendance/service/:serviceId', auth, adminController.attendanceByService);
 router.get('/attendance/event/:eventId', auth, adminController.attendanceByEvent);
 router.get('/attendance/export/:eventId', auth, adminController.exportAttendanceCSV);
+router.delete('/event/:eventId', auth, adminController.deleteEvent);
 module.exports = router;

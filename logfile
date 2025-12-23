@@ -105,3 +105,25 @@
 	       AND e.event_date::date = $2::date
 	     GROUP BY e.id
 	     ORDER BY e.event_date DESC
+2025-12-20 23:46:46.798 IST [3001] LOG:  received smart shutdown request
+2025-12-20 23:46:46.801 IST [3001] LOG:  background worker "logical replication launcher" (PID 3008) exited with exit code 1
+2025-12-20 23:46:46.801 IST [3003] LOG:  shutting down
+2025-12-20 23:46:46.813 IST [3001] LOG:  database system is shut down
+2025-12-21 14:08:28.451 IST [3848] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2025-12-21 14:08:28.453 IST [3848] LOG:  listening on IPv6 address "::1", port 5432
+2025-12-21 14:08:28.453 IST [3848] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-12-21 14:08:28.454 IST [3848] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-12-21 14:08:28.477 IST [3849] LOG:  database system was shut down at 2025-12-20 23:46:46 IST
+2025-12-21 14:08:28.486 IST [3848] LOG:  database system is ready to accept connections
+2025-12-23 22:09:32.327 IST [77302] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2025-12-23 22:09:32.327 IST [77302] DETAIL:  Key (member_id, service_id)=(264d5239-d0fc-4a61-9af8-d3c8b487203d, 5dbe4437-96ff-447d-b23e-144e2e14cff1) already exists.
+2025-12-23 22:09:32.327 IST [77302] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2025-12-23 22:10:34.027 IST [77431] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2025-12-23 22:10:34.027 IST [77431] DETAIL:  Key (member_id, service_id)=(264d5239-d0fc-4a61-9af8-d3c8b487203d, 5dbe4437-96ff-447d-b23e-144e2e14cff1) already exists.
+2025-12-23 22:10:34.027 IST [77431] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2025-12-23 22:26:07.602 IST [79842] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2025-12-23 22:26:07.602 IST [79842] DETAIL:  Key (member_id, service_id)=(264d5239-d0fc-4a61-9af8-d3c8b487203d, 8bda0d50-0aa4-4e0d-a30e-c62f78c481fc) already exists.
+2025-12-23 22:26:07.602 IST [79842] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
