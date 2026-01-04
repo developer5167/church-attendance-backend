@@ -47,3 +47,46 @@ curl -X DELETE \
 ```
 
 Ensure the admin token belongs to the same `church_id` as the event.
+
+## Testing Member Payment Link API
+
+This endpoint returns the `payment_link` set on the member's church record.
+
+- Endpoint: `GET /api/member/payment-link`
+- Auth: Bearer token (member)
+
+1) Obtain a member token (example using the test OTP):
+
+```bash
+curl -X POST \
+	-H "Content-Type: application/json" \
+	-d '{"phone":"+15551234567","otp":"123456"}' \
+	https://your-base-url/api/member/verify-otp
+```
+
+Response:
+
+```json
+{ "token": "<MEMBER_TOKEN>" }
+```
+
+2) Call the payment link endpoint with the member token:
+
+```bash
+curl -H "Authorization: Bearer <MEMBER_TOKEN>" \
+	https://your-base-url/api/member/payment-link
+```
+
+Example response:
+
+```json
+{ "paymentLink": "https://payments.example.com/abc123" }
+```
+
+If no payment link is set the response will be:
+
+```json
+{ "paymentLink": null }
+```
+
+Replace `https://your-base-url` with your `BASE_URL` (or localhost and port when running locally).

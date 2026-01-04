@@ -3,43 +3,43 @@ const jwt = require("../utils/jwt");
 const otpUtil = require("../utils/otp");
 const { v4: uuid } = require("uuid");
 
-exports.sendOtp = async (req, res) => {
-  const { phone } = req.body;
+// exports.sendOtp = async (req, res) => {
+//   const { phone } = req.body;
 
-  const otp = otpUtil.generateOtp();
+//   const otp = otpUtil.generateOtp();
 
-  // TEMP: log OTP
-  console.log(`OTP for ${phone}: ${otp}`);
+//   // TEMP: log OTP
+//   console.log(`OTP for ${phone}: ${otp}`);
 
-  res.json({ message: "OTP sent" });
-};
+//   res.json({ message: "OTP sent" });
+// };
 
-exports.verifyOtp = async (req, res) => {
-  const { phone, otp } = req.body;
+// exports.verifyOtp = async (req, res) => {
+//   const { phone, otp } = req.body;
 
-  if (otp !== "123456") {
-    return res.status(400).json({ message: "Invalid OTP" });
-  }
+//   if (otp !== "123456") {
+//     return res.status(400).json({ message: "Invalid OTP" });
+//   }
 
-  let member = await pool.query("SELECT * FROM members WHERE phone = $1", [
-    phone,
-  ]);
+//   let member = await pool.query("SELECT * FROM members WHERE phone = $1", [
+//     phone,
+//   ]);
 
-  if (member.rows.length === 0) {
-    member = await pool.query(
-      "INSERT INTO members (phone) VALUES ($1) RETURNING *",
-      [phone]
-    );
-  }
+//   if (member.rows.length === 0) {
+//     member = await pool.query(
+//       "INSERT INTO members (phone) VALUES ($1) RETURNING *",
+//       [phone]
+//     );
+//   }
 
-  const token = jwt.generateToken({
-    memberId: member.rows[0].id,
-    churchId: member.rows[0].church_id,
-    role: "member",
-  });
+//   const token = jwt.generateToken({
+//     memberId: member.rows[0].id,
+//     churchId: member.rows[0].church_id,
+//     role: "member",
+//   });
 
-  res.json({ token });
-};
+//   res.json({ token });
+// };
 exports.getRegisterMetadata = async (req, res) => {
   const { token } = req.query;
 
@@ -157,6 +157,35 @@ exports.getProfile = async (req, res) => {
   res.json(result.rows[0]);
 };
 
+// Get payment link for the member's church
+exports.getPaymentLink = async (req, res) => {
+  let churchId = req.user.churchId;
+  const memberId = req.user.memberId;
+
+  // If token didn't include churchId, try to look it up from members table
+  if (!churchId && memberId) {
+    const m = await pool.query('SELECT church_id FROM members WHERE id = $1', [
+      memberId,
+    ]);
+    if (m.rows.length > 0) churchId = m.rows[0].church_id;
+  }
+
+  if (!churchId) {
+    return res.status(404).json({ message: 'Church not found for member' });
+  }
+
+  const result = await pool.query(
+    'SELECT payment_link FROM churches WHERE id = $1',
+    [churchId]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ message: 'Church not found' });
+  }
+
+  res.json({ paymentLink: result.rows[0].payment_link || null });
+};
+
 exports.sendOtp = async (req, res) => {
   const { phone } = req.body;
 
@@ -175,7 +204,7 @@ exports.sendOtp = async (req, res) => {
   res.json({ message: "OTP sent" });
 };
 exports.verifyOtp = async (req, res) => {
-  const { phone, otp } = req.body;
+  const { phone, otp, churchId: churchIdFromBody } = req.body;
 
   const result = await pool.query(
     `SELECT * FROM otps
@@ -199,24 +228,49 @@ exports.verifyOtp = async (req, res) => {
     record.id,
   ]);
 
+  // validate provided churchId (if any)
+  let churchIdFinal = null;
+  if (churchIdFromBody) {
+    const ch = await pool.query('SELECT id FROM churches WHERE id = $1', [
+      churchIdFromBody,
+    ]);
+    if (ch.rows.length === 0) {
+      return res.status(400).json({ message: 'Invalid churchId' });
+    }
+    churchIdFinal = ch.rows[0].id;
+  }
+
   // create or fetch member
-  let member = await pool.query("SELECT * FROM members WHERE phone = $1", [
+  let member = await pool.query('SELECT * FROM members WHERE phone = $1', [
     phone,
   ]);
 
   if (member.rows.length === 0) {
+    // create new member, attach church if provided
     member = await pool.query(
-      `INSERT INTO members (id, phone)
-       VALUES ($1, $2) RETURNING *`,
-      [uuid(), phone]
+      `INSERT INTO members (id, phone, church_id)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [uuid(), phone, churchIdFinal]
     );
+  } else {
+    // existing member: if they don't have a church and one was provided, persist it
+    const existing = member.rows[0];
+    if (!existing.church_id && churchIdFinal) {
+      const updated = await pool.query(
+        'UPDATE members SET church_id = $1 WHERE id = $2 RETURNING *',
+        [churchIdFinal, existing.id]
+      );
+      member = updated;
+    }
   }
 
   const token = jwt.generateToken({
     memberId: member.rows[0].id,
     churchId: member.rows[0].church_id,
-    role: "member",
+    role: 'member',
   });
+
+  console.log(token);
 
   res.json({ token });
 };

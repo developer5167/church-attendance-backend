@@ -31,7 +31,7 @@ exports.login = async (req, res) => {
   churchId: admin.church_id,
   role: 'admin',
 });
-
+  
   res.json({ token });
 };
 exports.createEvent = async (req, res) => {
@@ -182,6 +182,42 @@ exports.listServices = async (req, res) => {
   );
 
   res.json(result.rows);
+};
+// Get payment link for the admin's church
+exports.getPaymentLink = async (req, res) => {
+  const churchId = req.user.churchId;
+
+  const result = await pool.query(
+    'SELECT payment_link FROM churches WHERE id = $1',
+    [churchId]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ message: 'Church not found' });
+  }
+
+  res.json({ paymentLink: result.rows[0].payment_link || null });
+};
+
+// Set (create/update) payment link for the admin's church
+exports.setPaymentLink = async (req, res) => {
+  const churchId = req.user.churchId;
+  const { paymentLink } = req.body;
+
+  if (typeof paymentLink !== 'string') {
+    return res.status(400).json({ message: 'Missing or invalid paymentLink' });
+  }
+
+  const result = await pool.query(
+    'UPDATE churches SET payment_link = $1 WHERE id = $2 RETURNING id, payment_link',
+    [paymentLink, churchId]
+  );
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ message: 'Church not found' });
+  }
+
+  res.json({ paymentLink: result.rows[0].payment_link });
 };
 exports.attendanceByService = async (req, res) => {
   const { serviceId } = req.params;

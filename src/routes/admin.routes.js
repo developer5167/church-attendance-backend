@@ -7,6 +7,8 @@ const auth = require('../middlewares/auth.middleware');
 router.post('/login', adminController.login);
 router.post('/event', auth, adminController.createEvent);
 router.post('/service', auth, adminController.createService);
+router.get('/church/payment-link', auth, adminController.getPaymentLink);
+router.post('/church/payment-link', auth, adminController.setPaymentLink);
 router.get('/events', auth, adminController.listEvents);
 router.get('/events/by-date', auth, adminController.listEventsByDate);
 router.get('/services/:eventId', auth, adminController.listServices);

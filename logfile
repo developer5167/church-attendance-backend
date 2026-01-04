@@ -127,3 +127,58 @@
 2025-12-23 22:26:07.602 IST [79842] DETAIL:  Key (member_id, service_id)=(264d5239-d0fc-4a61-9af8-d3c8b487203d, 8bda0d50-0aa4-4e0d-a30e-c62f78c481fc) already exists.
 2025-12-23 22:26:07.602 IST [79842] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
 	       VALUES ($1, $2, $3, $4)
+2025-12-23 22:28:35.904 IST [3848] LOG:  received smart shutdown request
+2025-12-23 22:28:35.906 IST [3848] LOG:  background worker "logical replication launcher" (PID 3855) exited with exit code 1
+2025-12-23 22:28:35.906 IST [3850] LOG:  shutting down
+2025-12-23 22:28:35.918 IST [3848] LOG:  database system is shut down
+2025-12-25 12:44:25.874 IST [3887] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2025-12-25 12:44:25.877 IST [3887] LOG:  listening on IPv6 address "::1", port 5432
+2025-12-25 12:44:25.877 IST [3887] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-12-25 12:44:25.878 IST [3887] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-12-25 12:44:25.901 IST [3889] LOG:  database system was shut down at 2025-12-23 22:28:35 IST
+2025-12-25 12:44:25.909 IST [3887] LOG:  database system is ready to accept connections
+2025-12-25 12:47:59.496 IST [4211] ERROR:  relation "churches" does not exist at character 15
+2025-12-25 12:47:59.496 IST [4211] STATEMENT:  select * from churches
+2025-12-25 12:48:12.622 IST [4211] ERROR:  relation "churches" does not exist at character 15
+2025-12-25 12:48:12.622 IST [4211] STATEMENT:  select * from churches
+2025-12-25 12:48:21.248 IST [4211] ERROR:  relation "churches" does not exist at character 15
+2025-12-25 12:48:21.248 IST [4211] STATEMENT:  select * from churches
+2025-12-25 12:49:21.905 IST [4254] ERROR:  update or delete on table "events" violates foreign key constraint "services_event_id_fkey" on table "services"
+2025-12-25 12:49:21.905 IST [4254] DETAIL:  Key (id)=(81d1bd68-b062-44e7-8e41-5dc5dc5e66ba) is still referenced from table "services".
+2025-12-25 12:49:21.905 IST [4254] STATEMENT:  delete from events
+2025-12-25 12:49:31.304 IST [4254] ERROR:  update or delete on table "members" violates foreign key constraint "registrations_member_id_fkey" on table "registrations"
+2025-12-25 12:49:31.304 IST [4254] DETAIL:  Key (id)=(5d25ad4b-8f81-4bfa-8590-815eadd54bae) is still referenced from table "registrations".
+2025-12-25 12:49:31.304 IST [4254] STATEMENT:  delete from members
+2025-12-25 13:54:19.441 IST [4254] ERROR:  syntax error at or near "members" at character 1
+2025-12-25 13:54:19.441 IST [4254] STATEMENT:  members
+2025-12-25 14:02:23.787 IST [4254] ERROR:  relation "admin" does not exist at character 16
+2025-12-25 14:02:23.787 IST [4254] STATEMENT:  select *  from admin
+2025-12-25 14:16:19.794 IST [4254] ERROR:  update or delete on table "events" violates foreign key constraint "services_event_id_fkey" on table "services"
+2025-12-25 14:16:19.794 IST [4254] DETAIL:  Key (id)=(e48d191d-3e9f-4b41-aa76-1c871f089571) is still referenced from table "services".
+2025-12-25 14:16:19.794 IST [4254] STATEMENT:  delete   from events
+2025-12-25 14:16:36.033 IST [4254] ERROR:  update or delete on table "services" violates foreign key constraint "registrations_service_id_fkey" on table "registrations"
+2025-12-25 14:16:36.033 IST [4254] DETAIL:  Key (id)=(cc349a54-14fd-4592-ba85-9c0a4853b85a) is still referenced from table "registrations".
+2025-12-25 14:16:36.033 IST [4254] STATEMENT:  delete from services
+2025-12-25 14:16:38.423 IST [4254] ERROR:  update or delete on table "services" violates foreign key constraint "registrations_service_id_fkey" on table "registrations"
+2025-12-25 14:16:38.423 IST [4254] DETAIL:  Key (id)=(cc349a54-14fd-4592-ba85-9c0a4853b85a) is still referenced from table "registrations".
+2025-12-25 14:16:38.423 IST [4254] STATEMENT:  delete from services
+2025-12-25 15:52:22.064 IST [3887] LOG:  received smart shutdown request
+2025-12-25 15:52:22.067 IST [3887] LOG:  background worker "logical replication launcher" (PID 3895) exited with exit code 1
+2025-12-25 15:52:22.067 IST [3890] LOG:  shutting down
+2025-12-25 15:52:22.078 IST [3887] LOG:  database system is shut down
+2025-12-27 13:23:21.692 IST [7260] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2025-12-27 13:23:21.694 IST [7260] LOG:  listening on IPv6 address "::1", port 5432
+2025-12-27 13:23:21.695 IST [7260] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-12-27 13:23:21.695 IST [7260] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-12-27 13:23:21.717 IST [7261] LOG:  database system was shut down at 2025-12-25 15:52:22 IST
+2025-12-27 13:23:21.730 IST [7260] LOG:  database system is ready to accept connections
+2025-12-29 19:35:15.851 IST [7260] LOG:  received smart shutdown request
+2025-12-29 19:35:15.856 IST [7260] LOG:  background worker "logical replication launcher" (PID 7267) exited with exit code 1
+2025-12-29 19:35:15.856 IST [7262] LOG:  shutting down
+2025-12-29 19:35:15.879 IST [7260] LOG:  database system is shut down
+2026-01-03 12:46:54.413 IST [3221] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2026-01-03 12:46:54.415 IST [3221] LOG:  listening on IPv6 address "::1", port 5432
+2026-01-03 12:46:54.415 IST [3221] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-01-03 12:46:54.416 IST [3221] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-01-03 12:46:54.442 IST [3222] LOG:  database system was shut down at 2026-01-02 23:01:46 IST
+2026-01-03 12:46:54.450 IST [3221] LOG:  database system is ready to accept connections
