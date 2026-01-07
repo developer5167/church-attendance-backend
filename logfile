@@ -182,3 +182,92 @@
 2026-01-03 12:46:54.416 IST [3221] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
 2026-01-03 12:46:54.442 IST [3222] LOG:  database system was shut down at 2026-01-02 23:01:46 IST
 2026-01-03 12:46:54.450 IST [3221] LOG:  database system is ready to accept connections
+2026-01-05 01:18:03.111 IST [3221] LOG:  received smart shutdown request
+2026-01-05 01:18:03.113 IST [3221] LOG:  background worker "logical replication launcher" (PID 3228) exited with exit code 1
+2026-01-05 01:18:03.113 IST [3223] LOG:  shutting down
+2026-01-05 01:18:03.128 IST [3221] LOG:  database system is shut down
+2026-01-05 16:59:35.498 IST [21770] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2026-01-05 16:59:35.502 IST [21770] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-01-05 16:59:35.502 IST [21770] LOG:  listening on IPv6 address "::1", port 5432
+2026-01-05 16:59:35.503 IST [21770] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-01-05 16:59:35.523 IST [21771] LOG:  database system was shut down at 2026-01-05 01:18:03 IST
+2026-01-05 16:59:35.533 IST [21770] LOG:  database system is ready to accept connections
+2026-01-05 17:12:02.279 IST [22876] ERROR:  relation "member" does not exist at character 15
+2026-01-05 17:12:02.279 IST [22876] STATEMENT:  select * from member
+2026-01-05 17:12:24.515 IST [22876] ERROR:  update or delete on table "events" violates foreign key constraint "services_event_id_fkey" on table "services"
+2026-01-05 17:12:24.515 IST [22876] DETAIL:  Key (id)=(c4124791-4802-40d7-a345-6597778323c9) is still referenced from table "services".
+2026-01-05 17:12:24.515 IST [22876] STATEMENT:  delete from events
+2026-01-05 17:56:15.588 IST [22876] ERROR:  syntax error at or near "SELECT" at character 23
+2026-01-05 17:56:15.588 IST [22876] STATEMENT:  select * from events
+	
+	SELECT full_name, coming_from, since_year, member_type, attending_with
+	     FROM members
+	     WHERE id = 23
+2026-01-05 17:56:21.497 IST [22876] ERROR:  operator does not exist: uuid = integer at character 104
+2026-01-05 17:56:21.497 IST [22876] HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+2026-01-05 17:56:21.497 IST [22876] STATEMENT:  SELECT full_name, coming_from, since_year, member_type, attending_with
+	     FROM members
+	     WHERE id = 23
+2026-01-05 17:56:36.945 IST [22876] ERROR:  syntax error at or near "SELECT" at character 23
+2026-01-05 17:56:36.945 IST [22876] STATEMENT:  select * from events
+	
+	SELECT full_name, coming_from, since_year, member_type, attending_with
+	     FROM members
+	     WHERE id = 'sdsad'
+2026-01-05 17:56:40.668 IST [22876] ERROR:  invalid input syntax for type uuid: "sdsad" at character 106
+2026-01-05 17:56:40.668 IST [22876] STATEMENT:  SELECT full_name, coming_from, since_year, member_type, attending_with
+	     FROM members
+	     WHERE id = 'sdsad'
+2026-01-05 17:57:18.851 IST [22876] ERROR:  invalid input syntax for type uuid: "sdsad" at character 106
+2026-01-05 17:57:18.851 IST [22876] STATEMENT:  SELECT full_name, coming_from, since_year, member_type, attending_with
+	     FROM members
+	     WHERE id = 'sdsad'
+2026-01-05 18:38:17.327 IST [33472] ERROR:  insert or update on table "registrations" violates foreign key constraint "registrations_member_id_fkey"
+2026-01-05 18:38:17.327 IST [33472] DETAIL:  Key (member_id)=(9d1aa4f7-36b9-4b11-b202-7c70db41070d) is not present in table "members".
+2026-01-05 18:38:17.327 IST [33472] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2026-01-05 19:07:58.510 IST [37132] ERROR:  null value in column "phone" of relation "members" violates not-null constraint
+2026-01-05 19:07:58.510 IST [37132] DETAIL:  Failing row contains (9d1aa4f7-36b9-4b11-b202-7c70db41070d, null, null, samuel, null, 2026-01-05 19:07:58.509038, 2026-01-05 19:07:58.509038, yusufguda , regular, alone, 2022).
+2026-01-05 19:07:58.510 IST [37132] STATEMENT:  INSERT INTO members
+	     (id, full_name, coming_from, since_year, member_type, attending_with)
+	     VALUES ($1, $2, $3, $4, $5, $6)
+2026-01-05 19:11:34.506 IST [36185] ERROR:  syntax error at or near "SELECT" at character 24
+2026-01-05 19:11:34.506 IST [36185] STATEMENT:  delete  from services
+	
+	SELECT full_name, coming_from, since_year, member_type, attending_with
+	     FROM members
+	     WHERE id = 'sdsad'
+2026-01-05 19:14:05.945 IST [37339] ERROR:  null value in column "phone" of relation "members" violates not-null constraint
+2026-01-05 19:14:05.945 IST [37339] DETAIL:  Failing row contains (9d1aa4f7-36b9-4b11-b202-7c70db41070d, null, null, samuel, null, 2026-01-05 19:14:05.943014, 2026-01-05 19:14:05.943014, yusufguda , regular, alone, 2022).
+2026-01-05 19:14:05.945 IST [37339] STATEMENT:  INSERT INTO members
+	     (id, full_name, coming_from, since_year, member_type, attending_with)
+	     VALUES ($1, $2, $3, $4, $5, $6)
+2026-01-05 19:29:35.718 IST [39706] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2026-01-05 19:29:35.718 IST [39706] DETAIL:  Key (member_id, service_id)=(1f8f5b88-9e0c-4102-88e5-de41f7049735, 5bcf9252-ae07-4d20-8f14-b20d216f3eba) already exists.
+2026-01-05 19:29:35.718 IST [39706] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2026-01-05 19:29:50.967 IST [39741] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2026-01-05 19:29:50.967 IST [39741] DETAIL:  Key (member_id, service_id)=(1f8f5b88-9e0c-4102-88e5-de41f7049735, 5bcf9252-ae07-4d20-8f14-b20d216f3eba) already exists.
+2026-01-05 19:29:50.967 IST [39741] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2026-01-05 19:42:14.139 IST [21770] LOG:  received smart shutdown request
+2026-01-05 19:42:14.141 IST [21770] LOG:  background worker "logical replication launcher" (PID 21777) exited with exit code 1
+2026-01-05 19:42:14.142 IST [21772] LOG:  shutting down
+2026-01-05 19:42:14.152 IST [21770] LOG:  database system is shut down
+2026-01-07 14:52:57.206 IST [14801] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2026-01-07 14:52:57.210 IST [14801] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-01-07 14:52:57.210 IST [14801] LOG:  listening on IPv6 address "::1", port 5432
+2026-01-07 14:52:57.211 IST [14801] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-01-07 14:52:57.239 IST [14803] LOG:  database system was shut down at 2026-01-05 19:42:14 IST
+2026-01-07 14:52:57.248 IST [14801] LOG:  database system is ready to accept connections
+2026-01-07 15:00:08.318 IST [15269] ERROR:  value too long for type character varying(20)
+2026-01-07 15:00:08.318 IST [15269] STATEMENT:  INSERT INTO services 
+	     (id, event_id, service_code, service_time, qr_token)
+	     VALUES ($1, $2, $3, $4, $5)
+2026-01-07 15:00:35.361 IST [15290] ERROR:  value too long for type character varying(20)
+2026-01-07 15:00:35.361 IST [15290] STATEMENT:  INSERT INTO services 
+	     (id, event_id, service_code, service_time, qr_token)
+	     VALUES ($1, $2, $3, $4, $5)
+2026-01-07 15:07:19.215 IST [16818] ERROR:  relation "memembers" does not exist at character 15
+2026-01-07 15:07:19.215 IST [16818] STATEMENT:  select * from memembers
+	

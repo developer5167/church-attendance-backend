@@ -60,17 +60,17 @@ exports.getRegisterMetadata = async (req, res) => {
   );
 
   if (result.rows.length === 0) {
-    return res.status(404).json({ message: 'Invalid or expired QR' });
+    return res.status(404).json({ message: "Invalid or expired QR" });
   }
 
   const service = result.rows[0];
   const now = new Date();
 
   // ❗ Block early (wrong date)
-  const today = now.toISOString().split('T')[0];
+  const today = now.toISOString().split("T")[0];
   if (today !== service.event_date) {
     return res.status(400).json({
-      message: 'Registration not open for this date',
+      message: "Registration not open for this date",
     });
   }
 
@@ -99,7 +99,7 @@ exports.getRegisterMetadata = async (req, res) => {
   // 2️⃣ Final cutoff check
   if (now > registrationEndTime) {
     return res.status(400).json({
-      message: 'Registration closed for this service',
+      message: "Registration closed for this service",
     });
   }
 
@@ -133,28 +133,58 @@ exports.saveProfile = async (req, res) => {
   const { full_name, coming_from, since_year, member_type, attending_with } =
     req.body;
   const memberId = req.user.memberId;
-
-  await pool.query(
-    `UPDATE members
+  const result = await pool.query(`SELECT id FROM members WHERE id = $1`, [
+    memberId,
+  ]);
+  try {
+    if (result.rows.length === 0) {
+    await pool.query(
+      `INSERT INTO members
+     (id, full_name, coming_from, since_year, member_type, attending_with)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        memberId,
+        full_name,
+        coming_from,
+        since_year,
+        member_type,
+        attending_with,
+      ]
+    );
+  } else {
+    await pool.query(
+      `UPDATE members
      SET full_name=$1, coming_from=$2, since_year=$3,
          member_type=$4, attending_with=$5, last_updated=NOW()
      WHERE id=$6`,
-    [full_name, coming_from, since_year, member_type, attending_with, memberId]
-  );
-
+      [
+        full_name,
+        coming_from,
+        since_year,
+        member_type,
+        attending_with,
+        memberId,
+      ]
+    );
+  }
   res.json({ message: "Profile updated" });
+ } catch (err) {
+    console.error("Error saving profile:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+  
+
+  
 };
 exports.getProfile = async (req, res) => {
-  const memberId = req.user.memberId;
-
+  const memberId = req.user?.memberId;
   const result = await pool.query(
     `SELECT full_name, coming_from, since_year, member_type, attending_with
-     FROM members
-     WHERE id = $1`,
+       FROM members
+       WHERE id = $1`,
     [memberId]
   );
-
-  res.json(result.rows[0]);
+  return res.json(result.rows[0]);
 };
 
 // Get payment link for the member's church
@@ -164,23 +194,23 @@ exports.getPaymentLink = async (req, res) => {
 
   // If token didn't include churchId, try to look it up from members table
   if (!churchId && memberId) {
-    const m = await pool.query('SELECT church_id FROM members WHERE id = $1', [
+    const m = await pool.query("SELECT church_id FROM members WHERE id = $1", [
       memberId,
     ]);
     if (m.rows.length > 0) churchId = m.rows[0].church_id;
   }
 
   if (!churchId) {
-    return res.status(404).json({ message: 'Church not found for member' });
+    return res.status(404).json({ message: "Church not found for member" });
   }
 
   const result = await pool.query(
-    'SELECT payment_link FROM churches WHERE id = $1',
+    "SELECT payment_link FROM churches WHERE id = $1",
     [churchId]
   );
 
   if (result.rows.length === 0) {
-    return res.status(404).json({ message: 'Church not found' });
+    return res.status(404).json({ message: "Church not found" });
   }
 
   res.json({ paymentLink: result.rows[0].payment_link || null });
@@ -231,17 +261,17 @@ exports.verifyOtp = async (req, res) => {
   // validate provided churchId (if any)
   let churchIdFinal = null;
   if (churchIdFromBody) {
-    const ch = await pool.query('SELECT id FROM churches WHERE id = $1', [
+    const ch = await pool.query("SELECT id FROM churches WHERE id = $1", [
       churchIdFromBody,
     ]);
     if (ch.rows.length === 0) {
-      return res.status(400).json({ message: 'Invalid churchId' });
+      return res.status(400).json({ message: "Invalid churchId" });
     }
     churchIdFinal = ch.rows[0].id;
   }
 
   // create or fetch member
-  let member = await pool.query('SELECT * FROM members WHERE phone = $1', [
+  let member = await pool.query("SELECT * FROM members WHERE phone = $1", [
     phone,
   ]);
 
@@ -257,7 +287,7 @@ exports.verifyOtp = async (req, res) => {
     const existing = member.rows[0];
     if (!existing.church_id && churchIdFinal) {
       const updated = await pool.query(
-        'UPDATE members SET church_id = $1 WHERE id = $2 RETURNING *',
+        "UPDATE members SET church_id = $1 WHERE id = $2 RETURNING *",
         [churchIdFinal, existing.id]
       );
       member = updated;
@@ -267,7 +297,7 @@ exports.verifyOtp = async (req, res) => {
   const token = jwt.generateToken({
     memberId: member.rows[0].id,
     churchId: member.rows[0].church_id,
-    role: 'member',
+    role: "member",
   });
 
   console.log(token);
