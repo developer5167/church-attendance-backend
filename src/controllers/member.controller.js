@@ -237,7 +237,6 @@ exports.getPaymentLink = async (req, res) => {
 
 
 //twilio integration
-const { sendOtpSms } = require("../utils/twilioSms");
 exports.sendOtp = async (req, res) => {
   const { phone } = req.body;
 
