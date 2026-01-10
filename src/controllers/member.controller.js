@@ -2,6 +2,7 @@ const pool = require("../db");
 const jwt = require("../utils/jwt");
 const otpUtil = require("../utils/otp");
 const { v4: uuid } = require("uuid");
+const { sendOtpSms } = require("../utils/twilioSms");
 
 // exports.sendOtp = async (req, res) => {
 //   const { phone } = req.body;
@@ -216,11 +217,32 @@ exports.getPaymentLink = async (req, res) => {
   res.json({ paymentLink: result.rows[0].payment_link || null });
 };
 
+// exports.sendOtp = async (req, res) => {
+//   const { phone } = req.body;
+
+//   const otp = otpUtil.generateOtp();
+//   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+
+//   await pool.query(
+//     `INSERT INTO otps (id, phone, otp, expires_at)
+//      VALUES ($1, $2, $3, $4)`,
+//     [uuid(), phone, otp, expiresAt]
+//   );
+
+//   // TEMP: log OTP (later SMS)
+//   console.log(`OTP for ${phone}: ${otp}`);
+
+//   res.json({ message: "OTP sent" });
+// };
+
+
+//twilio integration
+const { sendOtpSms } = require("../utils/twilioSms");
 exports.sendOtp = async (req, res) => {
   const { phone } = req.body;
 
   const otp = otpUtil.generateOtp();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
   await pool.query(
     `INSERT INTO otps (id, phone, otp, expires_at)
@@ -228,17 +250,19 @@ exports.sendOtp = async (req, res) => {
     [uuid(), phone, otp, expiresAt]
   );
 
-  // TEMP: log OTP (later SMS)
-  console.log(`OTP for ${phone}: ${otp}`);
-
-  res.json({ message: "OTP sent" });
+  try {
+    await sendOtpSms(phone, otp);
+    res.json({ message: "OTP sent" });
+  } catch (err) {
+    console.error("Twilio error:", err.message);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
 };
 exports.verifyOtp = async (req, res) => {
   const { phone, otp, churchId: churchIdFromBody } = req.body;
-
   const result = await pool.query(
     `SELECT * FROM otps
-     WHERE phone = $1 AND otp = $2 AND verified = false
+     WHERE phone = $1 AND otp = $2
      ORDER BY created_at DESC
      LIMIT 1`,
     [phone, otp]
@@ -250,13 +274,18 @@ exports.verifyOtp = async (req, res) => {
 
   const record = result.rows[0];
 
+  if (record.verified) {
+    return res.status(400).json({ message: "OTP already used" });
+  }
+
   if (new Date() > record.expires_at) {
+    // remove expired OTP record
+    await pool.query(`DELETE FROM otps WHERE id = $1`, [record.id]);
     return res.status(400).json({ message: "OTP expired" });
   }
 
-  await pool.query(`UPDATE otps SET verified = true WHERE id = $1`, [
-    record.id,
-  ]);
+  // Successful verification: remove OTPs for this phone to prevent reuse
+  await pool.query(`DELETE FROM otps WHERE phone = $1`, [phone]);
 
   // validate provided churchId (if any)
   let churchIdFinal = null;

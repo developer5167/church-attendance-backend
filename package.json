@@ -20,6 +20,7 @@
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.16.3",
+    "twilio": "^5.11.2",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
