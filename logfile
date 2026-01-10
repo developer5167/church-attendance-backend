@@ -271,3 +271,13 @@
 2026-01-07 15:07:19.215 IST [16818] ERROR:  relation "memembers" does not exist at character 15
 2026-01-07 15:07:19.215 IST [16818] STATEMENT:  select * from memembers
 	
+2026-01-07 19:02:33.543 IST [14801] LOG:  received smart shutdown request
+2026-01-07 19:02:33.545 IST [14801] LOG:  background worker "logical replication launcher" (PID 14809) exited with exit code 1
+2026-01-07 19:02:33.545 IST [14804] LOG:  shutting down
+2026-01-07 19:02:33.558 IST [14801] LOG:  database system is shut down
+2026-01-10 12:51:00.644 IST [2931] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2026-01-10 12:51:00.647 IST [2931] LOG:  listening on IPv6 address "::1", port 5432
+2026-01-10 12:51:00.648 IST [2931] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-01-10 12:51:00.648 IST [2931] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-01-10 12:51:00.675 IST [2932] LOG:  database system was shut down at 2026-01-07 19:02:33 IST
+2026-01-10 12:51:00.689 IST [2931] LOG:  database system is ready to accept connections
