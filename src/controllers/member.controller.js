@@ -131,7 +131,7 @@ exports.submitRegistration = async (req, res) => {
 };
 
 exports.saveProfile = async (req, res) => {
-  const { full_name, coming_from, since_year, member_type, attending_with } =
+  const { full_name, coming_from, since_year, member_type, attending_with,baptised,email,gender,baptised_year } =
     req.body;
   const memberId = req.user.memberId;
   const result = await pool.query(`SELECT id FROM members WHERE id = $1`, [
@@ -142,7 +142,7 @@ exports.saveProfile = async (req, res) => {
     await pool.query(
       `INSERT INTO members
      (id, full_name, coming_from, since_year, member_type, attending_with)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+     VALUES ($1, $2, $3, $4, $5, $6,$7,$8,$9,$10)`,
       [
         memberId,
         full_name,
@@ -150,14 +150,17 @@ exports.saveProfile = async (req, res) => {
         since_year,
         member_type,
         attending_with,
-      ]
+        baptised,
+        email,
+        gender,baptised_year
+         ]
     );
   } else {
     await pool.query(
       `UPDATE members
      SET full_name=$1, coming_from=$2, since_year=$3,
          member_type=$4, attending_with=$5, last_updated=NOW()
-     WHERE id=$6`,
+     WHERE id=$6,$7,$8,$9,$10`,
       [
         full_name,
         coming_from,
@@ -165,6 +168,10 @@ exports.saveProfile = async (req, res) => {
         member_type,
         attending_with,
         memberId,
+        baptised,
+         email,
+        gender,
+        baptised_year
       ]
     );
   }
@@ -177,10 +184,11 @@ exports.saveProfile = async (req, res) => {
 
   
 };
+
 exports.getProfile = async (req, res) => {
   const memberId = req.user?.memberId;
   const result = await pool.query(
-    `SELECT full_name, coming_from, since_year, member_type, attending_with
+    `SELECT full_name, coming_from, since_year, member_type, attending_with,gender,email,baptised,baptised_year
        FROM members
        WHERE id = $1`,
     [memberId]
@@ -237,7 +245,6 @@ exports.getPaymentLink = async (req, res) => {
 
 
 //twilio integration
-const { sendOtpSms } = require("../utils/twilioSms");
 exports.sendOtp = async (req, res) => {
   const { phone } = req.body;
 
