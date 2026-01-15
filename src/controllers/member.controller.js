@@ -141,7 +141,7 @@ exports.saveProfile = async (req, res) => {
     if (result.rows.length === 0) {
     await pool.query(
       `INSERT INTO members
-     (id, full_name, coming_from, since_year, member_type, attending_with)
+     (id, full_name, coming_from, since_year, member_type, attending_with,baptised,email,gender,baptised_year)
      VALUES ($1, $2, $3, $4, $5, $6,$7,$8,$9,$10)`,
       [
         memberId,
@@ -159,8 +159,8 @@ exports.saveProfile = async (req, res) => {
     await pool.query(
       `UPDATE members
      SET full_name=$1, coming_from=$2, since_year=$3,
-         member_type=$4, attending_with=$5, last_updated=NOW()
-     WHERE id=$6,$7,$8,$9,$10`,
+         member_type=$4, attending_with=$5, last_updated=NOW(),baptised=$7,email=$8,gender=$9,baptised_year=$10
+     WHERE id=$6`,
       [
         full_name,
         coming_from,
@@ -169,7 +169,7 @@ exports.saveProfile = async (req, res) => {
         attending_with,
         memberId,
         baptised,
-         email,
+        email,
         gender,
         baptised_year
       ]

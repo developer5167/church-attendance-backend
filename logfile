@@ -533,3 +533,42 @@
 	
 	
 	
+2026-01-15 17:41:26.958 IST [8924] FATAL:  terminating connection due to administrator command
+2026-01-15 17:42:04.106 IST [10404] ERROR:  unrecognized configuration parameter "transaction_timeout"
+2026-01-15 17:42:04.106 IST [10404] STATEMENT:  SET transaction_timeout = 0;
+	
+2026-01-15 17:42:04.136 IST [10404] ERROR:  role "church_user" does not exist
+2026-01-15 17:42:04.136 IST [10404] STATEMENT:  ALTER TABLE public.admins OWNER TO church_user;
+	
+	
+2026-01-15 17:42:04.138 IST [10404] ERROR:  role "church_user" does not exist
+2026-01-15 17:42:04.138 IST [10404] STATEMENT:  ALTER TABLE public.churches OWNER TO church_user;
+	
+	
+2026-01-15 17:42:04.140 IST [10404] ERROR:  role "church_user" does not exist
+2026-01-15 17:42:04.140 IST [10404] STATEMENT:  ALTER TABLE public.events OWNER TO church_user;
+	
+	
+2026-01-15 17:42:04.142 IST [10404] ERROR:  role "church_user" does not exist
+2026-01-15 17:42:04.142 IST [10404] STATEMENT:  ALTER TABLE public.members OWNER TO church_user;
+	
+	
+2026-01-15 17:42:04.143 IST [10404] ERROR:  role "church_user" does not exist
+2026-01-15 17:42:04.143 IST [10404] STATEMENT:  ALTER TABLE public.otps OWNER TO church_user;
+	
+	
+2026-01-15 17:42:04.145 IST [10404] ERROR:  role "church_user" does not exist
+2026-01-15 17:42:04.145 IST [10404] STATEMENT:  ALTER TABLE public.registrations OWNER TO church_user;
+	
+	
+2026-01-15 17:42:04.148 IST [10404] ERROR:  role "church_user" does not exist
+2026-01-15 17:42:04.148 IST [10404] STATEMENT:  ALTER TABLE public.services OWNER TO church_user;
+	
+	
+2026-01-15 17:42:23.687 IST [10432] FATAL:  database "church_attendence_db" does not exist
+2026-01-15 17:42:23.694 IST [10433] FATAL:  database "church_attendence_db" does not exist
+2026-01-15 17:48:21.974 IST [11112] ERROR:  syntax error at or near "," at character 149
+2026-01-15 17:48:21.974 IST [11112] STATEMENT:  UPDATE members
+	     SET full_name=$1, coming_from=$2, since_year=$3,
+	         member_type=$4, attending_with=$5, last_updated=NOW()
+	     WHERE id=$6,$7,$8,$9,$10
