@@ -133,6 +133,10 @@ exports.listEventsByDate = async (req, res) => {
         e.id,
         e.name,
         to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+        (SELECT COUNT(r2.id)
+         FROM registrations r2
+         JOIN services s2 ON r2.service_id = s2.id
+         WHERE s2.event_id = e.id) AS total_attendees,
         COALESCE(
           json_agg(
             json_build_object(
@@ -229,7 +233,8 @@ exports.attendanceByService = async (req, res) => {
   const result = await pool.query(
     `SELECT 
         m.*,
-        r.submitted_at
+        r.submitted_at,
+        r.prayer_request
      FROM registrations r
      JOIN members m ON r.member_id = m.id
      WHERE r.service_id = $1

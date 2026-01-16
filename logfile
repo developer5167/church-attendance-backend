@@ -572,3 +572,39 @@
 	     SET full_name=$1, coming_from=$2, since_year=$3,
 	         member_type=$4, attending_with=$5, last_updated=NOW()
 	     WHERE id=$6,$7,$8,$9,$10
+2026-01-15 23:38:11.581 IST [3615] LOG:  received smart shutdown request
+2026-01-15 23:38:11.583 IST [3615] LOG:  background worker "logical replication launcher" (PID 3622) exited with exit code 1
+2026-01-15 23:38:11.584 IST [3617] LOG:  shutting down
+2026-01-15 23:38:11.596 IST [3615] LOG:  database system is shut down
+2026-01-16 10:58:20.671 IST [5613] LOG:  starting PostgreSQL 14.15 (Homebrew) on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.4), 64-bit
+2026-01-16 10:58:20.673 IST [5613] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-01-16 10:58:20.673 IST [5613] LOG:  listening on IPv6 address "::1", port 5432
+2026-01-16 10:58:20.675 IST [5613] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-01-16 10:58:20.703 IST [5614] LOG:  database system was shut down at 2026-01-15 23:38:11 IST
+2026-01-16 10:58:20.716 IST [5613] LOG:  database system is ready to accept connections
+2026-01-16 11:58:07.061 IST [17504] ERROR:  syntax error at or near "members" at character 10
+2026-01-16 11:58:07.061 IST [17504] STATEMENT:  select * members
+2026-01-16 11:58:28.282 IST [17504] ERROR:  update or delete on table "members" violates foreign key constraint "registrations_member_id_fkey" on table "registrations"
+2026-01-16 11:58:28.282 IST [17504] DETAIL:  Key (id)=(4a301193-f941-468f-b858-16af56aea657) is still referenced from table "registrations".
+2026-01-16 11:58:28.282 IST [17504] STATEMENT:  delete from members
+2026-01-16 11:58:35.425 IST [17504] ERROR:  update or delete on table "services" violates foreign key constraint "registrations_service_id_fkey" on table "registrations"
+2026-01-16 11:58:35.425 IST [17504] DETAIL:  Key (id)=(cc19ee24-5820-4f7c-8144-e2ae9aebc555) is still referenced from table "registrations".
+2026-01-16 11:58:35.425 IST [17504] STATEMENT:  delete from services
+2026-01-16 12:49:07.575 IST [19494] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2026-01-16 12:49:07.575 IST [19494] DETAIL:  Key (member_id, service_id)=(4776ecb8-ded1-4709-82a5-f07fcfda71fb, b85e7cc7-f93a-401d-91d9-09a59f41ff63) already exists.
+2026-01-16 12:49:07.575 IST [19494] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2026-01-16 12:56:28.215 IST [19994] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2026-01-16 12:56:28.215 IST [19994] DETAIL:  Key (member_id, service_id)=(4776ecb8-ded1-4709-82a5-f07fcfda71fb, b85e7cc7-f93a-401d-91d9-09a59f41ff63) already exists.
+2026-01-16 12:56:28.215 IST [19994] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
+2026-01-16 13:31:02.006 IST [22002] ERROR:  update or delete on table "events" violates foreign key constraint "services_event_id_fkey" on table "services"
+2026-01-16 13:31:02.006 IST [22002] DETAIL:  Key (id)=(36d17ff4-466d-4218-8023-83507e4766ce) is still referenced from table "services".
+2026-01-16 13:31:02.006 IST [22002] STATEMENT:  delete from events
+2026-01-16 13:31:08.109 IST [22002] ERROR:  update or delete on table "services" violates foreign key constraint "registrations_service_id_fkey" on table "registrations"
+2026-01-16 13:31:08.109 IST [22002] DETAIL:  Key (id)=(b85e7cc7-f93a-401d-91d9-09a59f41ff63) is still referenced from table "registrations".
+2026-01-16 13:31:08.109 IST [22002] STATEMENT:  delete from services
+2026-01-16 13:50:52.139 IST [23131] ERROR:  duplicate key value violates unique constraint "registrations_member_id_service_id_key"
+2026-01-16 13:50:52.139 IST [23131] DETAIL:  Key (member_id, service_id)=(4776ecb8-ded1-4709-82a5-f07fcfda71fb, 9176a0f4-36c1-4205-a814-e22c3d703df1) already exists.
+2026-01-16 13:50:52.139 IST [23131] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
+	       VALUES ($1, $2, $3, $4)
