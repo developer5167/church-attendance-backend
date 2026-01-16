@@ -16,6 +16,8 @@ router.post('/register/submit', auth,
 router.post('/profile', auth, memberController.saveProfile);
 router.get('/profile', auth, memberController.getProfile);
 router.get('/payment-link', auth, memberController.getPaymentLink);
+router.post('/baptism-request', auth, memberController.requestBaptism);
+router.get('/baptism-request/status', auth, memberController.getBaptismRequestStatus);
 
 
 module.exports = router;

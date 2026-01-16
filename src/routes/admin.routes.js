@@ -16,4 +16,6 @@ router.get('/attendance/service/:serviceId', auth, adminController.attendanceByS
 router.get('/attendance/event/:eventId', auth, adminController.attendanceByEvent);
 router.get('/attendance/export/:eventId', auth, adminController.exportAttendanceCSV);
 router.delete('/event/:eventId', auth, adminController.deleteEvent);
+router.get('/baptism-requests', auth, adminController.listBaptismRequests);
+router.patch('/baptism-requests/:requestId/complete', auth, adminController.completeBaptism);
 module.exports = router;

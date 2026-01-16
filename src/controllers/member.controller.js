@@ -340,3 +340,70 @@ exports.verifyOtp = async (req, res) => {
 
   res.json({ token });
 };
+
+exports.requestBaptism = async (req, res) => {
+  const memberId = req.user.memberId;
+
+  try {
+    // Check if member already has a pending baptism request
+    const existingRequest = await pool.query(
+      'SELECT * FROM baptism_requests WHERE member_id = $1 AND completed_at IS NULL',
+      [memberId]
+    );
+
+    if (existingRequest.rows.length > 0) {
+      return res.status(400).json({ message: 'You already have a pending baptism request' });
+    }
+
+    // Create new baptism request
+    const result = await pool.query(
+      `INSERT INTO baptism_requests (member_id)
+       VALUES ($1)
+       RETURNING id, member_id, created_at, completed_at`,
+      [memberId]
+    );
+
+    res.status(201).json({ 
+      message: 'Baptism request submitted successfully',
+      request: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error creating baptism request:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.getBaptismRequestStatus = async (req, res) => {
+  const memberId = req.user.memberId;
+
+  try {
+    // Get member's baptism request (pending or completed)
+    const result = await pool.query(
+      `SELECT id, member_id, created_at, completed_at
+       FROM baptism_requests
+       WHERE member_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [memberId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ 
+        hasRequest: false,
+        request: null
+      });
+    }
+
+    const request = result.rows[0];
+    const isPending = request.completed_at === null;
+
+    res.json({ 
+      hasRequest: true,
+      status: isPending ? 'pending' : 'completed',
+      request: request
+    });
+  } catch (err) {
+    console.error('Error fetching baptism request status:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

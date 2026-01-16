@@ -355,4 +355,80 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
+exports.completeBaptism = async (req, res) => {
+  const { requestId } = req.params;
+  const churchId = req.user.churchId;
+
+  try {
+    // Verify the baptism request exists and belongs to the admin's church
+    const requestCheck = await pool.query(
+      `SELECT br.* FROM baptism_requests br
+       JOIN members m ON br.member_id = m.id
+       WHERE br.id = $1 AND m.church_id = $2`,
+      [requestId, churchId]
+    );
+
+    if (requestCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Baptism request not found or not authorized' });
+    }
+
+    if (requestCheck.rows[0].completed_at !== null) {
+      return res.status(400).json({ message: 'Baptism request already completed' });
+    }
+
+    // Mark the baptism request as completed
+    const result = await pool.query(
+      `UPDATE baptism_requests
+       SET completed_at = NOW()
+       WHERE id = $1
+       RETURNING id, member_id, created_at, completed_at`,
+      [requestId]
+    );
+
+    res.json({ 
+      message: 'Baptism marked as completed',
+      request: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error completing baptism:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.listBaptismRequests = async (req, res) => {
+  const churchId = req.user.churchId;
+  const { status } = req.query; // 'pending' or 'completed'
+
+  try {
+    let query = `
+      SELECT 
+        br.id,
+        br.member_id,
+        br.created_at,
+        br.completed_at,
+        m.full_name AS member_name,
+        m.phone AS member_phone,
+        m.email AS member_email
+      FROM baptism_requests br
+      JOIN members m ON br.member_id = m.id
+      WHERE m.church_id = $1
+    `;
+
+    if (status === 'pending') {
+      query += ' AND br.completed_at IS NULL';
+    } else if (status === 'completed') {
+      query += ' AND br.completed_at IS NOT NULL';
+    }
+
+    query += ' ORDER BY br.created_at DESC';
+
+    const result = await pool.query(query, [churchId]);
+
+    res.json({ requests: result.rows });
+  } catch (err) {
+    console.error('Error listing baptism requests:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 

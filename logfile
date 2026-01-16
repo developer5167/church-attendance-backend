@@ -608,3 +608,137 @@
 2026-01-16 13:50:52.139 IST [23131] DETAIL:  Key (member_id, service_id)=(4776ecb8-ded1-4709-82a5-f07fcfda71fb, 9176a0f4-36c1-4205-a814-e22c3d703df1) already exists.
 2026-01-16 13:50:52.139 IST [23131] STATEMENT:  INSERT INTO registrations (id, member_id, service_id, prayer_request)
 	       VALUES ($1, $2, $3, $4)
+2026-01-16 22:11:42.412 IST [47746] ERROR:  syntax error at or near "getrandom_uuid" at character 40
+2026-01-16 22:11:42.412 IST [47746] STATEMENT:  create table baptism_requests(
+	id uuid getrandom_uuid(),
+	
+	
+	member_id uuid references members(id)
+	)
+2026-01-16 22:11:48.242 IST [47746] ERROR:  syntax error at or near "get_random_uuid" at character 40
+2026-01-16 22:11:48.242 IST [47746] STATEMENT:  create table baptism_requests(
+	id uuid get_random_uuid(),
+	
+	
+	member_id uuid references members(id)
+	)
+2026-01-16 22:12:43.668 IST [47746] ERROR:  function get_random_uuid() does not exist at character 48
+2026-01-16 22:12:43.668 IST [47746] HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+2026-01-16 22:12:43.668 IST [47746] STATEMENT:  create table baptism_requests(
+	id uuid default get_random_uuid(),
+	
+	
+	member_id uuid references members(id)
+	)
+2026-01-16 23:10:55.097 IST [51442] ERROR:  column m.name does not exist at character 109
+2026-01-16 23:10:55.097 IST [51442] STATEMENT:  
+	      SELECT 
+	        br.id,
+	        br.member_id,
+	        br.created_at,
+	        br.completed_at,
+	        m.name AS member_name,
+	        m.phone AS member_phone,
+	        m.email AS member_email
+	      FROM baptism_requests br
+	      JOIN members m ON br.member_id = m.id
+	      WHERE m.church_id = $1
+	     ORDER BY br.created_at DESC
+2026-01-16 23:10:58.000 IST [51446] ERROR:  column m.name does not exist at character 109
+2026-01-16 23:10:58.000 IST [51446] STATEMENT:  
+	      SELECT 
+	        br.id,
+	        br.member_id,
+	        br.created_at,
+	        br.completed_at,
+	        m.name AS member_name,
+	        m.phone AS member_phone,
+	        m.email AS member_email
+	      FROM baptism_requests br
+	      JOIN members m ON br.member_id = m.id
+	      WHERE m.church_id = $1
+	     AND br.completed_at IS NULL ORDER BY br.created_at DESC
+2026-01-16 23:10:58.862 IST [51447] ERROR:  column m.name does not exist at character 109
+2026-01-16 23:10:58.862 IST [51447] STATEMENT:  
+	      SELECT 
+	        br.id,
+	        br.member_id,
+	        br.created_at,
+	        br.completed_at,
+	        m.name AS member_name,
+	        m.phone AS member_phone,
+	        m.email AS member_email
+	      FROM baptism_requests br
+	      JOIN members m ON br.member_id = m.id
+	      WHERE m.church_id = $1
+	     AND br.completed_at IS NOT NULL ORDER BY br.created_at DESC
+2026-01-16 23:10:59.741 IST [51448] ERROR:  column m.name does not exist at character 109
+2026-01-16 23:10:59.741 IST [51448] STATEMENT:  
+	      SELECT 
+	        br.id,
+	        br.member_id,
+	        br.created_at,
+	        br.completed_at,
+	        m.name AS member_name,
+	        m.phone AS member_phone,
+	        m.email AS member_email
+	      FROM baptism_requests br
+	      JOIN members m ON br.member_id = m.id
+	      WHERE m.church_id = $1
+	     ORDER BY br.created_at DESC
+2026-01-16 23:11:01.906 IST [51452] ERROR:  column m.name does not exist at character 109
+2026-01-16 23:11:01.906 IST [51452] STATEMENT:  
+	      SELECT 
+	        br.id,
+	        br.member_id,
+	        br.created_at,
+	        br.completed_at,
+	        m.name AS member_name,
+	        m.phone AS member_phone,
+	        m.email AS member_email
+	      FROM baptism_requests br
+	      JOIN members m ON br.member_id = m.id
+	      WHERE m.church_id = $1
+	     ORDER BY br.created_at DESC
+2026-01-16 23:11:10.463 IST [51456] ERROR:  column m.name does not exist at character 109
+2026-01-16 23:11:10.463 IST [51456] STATEMENT:  
+	      SELECT 
+	        br.id,
+	        br.member_id,
+	        br.created_at,
+	        br.completed_at,
+	        m.name AS member_name,
+	        m.phone AS member_phone,
+	        m.email AS member_email
+	      FROM baptism_requests br
+	      JOIN members m ON br.member_id = m.id
+	      WHERE m.church_id = $1
+	     ORDER BY br.created_at DESC
+2026-01-16 23:11:20.557 IST [51464] ERROR:  column m.name does not exist at character 109
+2026-01-16 23:11:20.557 IST [51464] STATEMENT:  
+	      SELECT 
+	        br.id,
+	        br.member_id,
+	        br.created_at,
+	        br.completed_at,
+	        m.name AS member_name,
+	        m.phone AS member_phone,
+	        m.email AS member_email
+	      FROM baptism_requests br
+	      JOIN members m ON br.member_id = m.id
+	      WHERE m.church_id = $1
+	     ORDER BY br.created_at DESC
+2026-01-16 23:12:11.388 IST [51550] ERROR:  column m.name does not exist at character 109
+2026-01-16 23:12:11.388 IST [51550] STATEMENT:  
+	      SELECT 
+	        br.id,
+	        br.member_id,
+	        br.created_at,
+	        br.completed_at,
+	        m.name AS member_name,
+	        m.phone AS member_phone,
+	        m.email AS member_email
+	      FROM baptism_requests br
+	      JOIN members m ON br.member_id = m.id
+	      WHERE m.church_id = $1
+	     ORDER BY br.created_at DESC
