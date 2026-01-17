@@ -430,5 +430,396 @@ exports.listBaptismRequests = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+exports.listVolunteerRequests = async (req, res) => {
+  console.log("sdsad");
+  
+  try {
+    const {
+      departmentNameId,
+      departmentId,
+      status,
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
 
+    // Validate pagination params
+    const pageNum = parseInt(page, 10);
+    const limitNum = Math.min(parseInt(limit, 10), 100);
+    const offset = (pageNum - 1) * limitNum;
+
+    // Validate sort params
+    const allowedSortBy = ['createdAt', 'memberName'];
+    const allowedSortOrder = ['asc', 'desc'];
+    const sortColumn = allowedSortBy.includes(sortBy) ? sortBy : 'createdAt';
+    const order = allowedSortOrder.includes(sortOrder) ? sortOrder.toUpperCase() : 'DESC';
+
+    // Build WHERE clause
+    let whereConditions = [];
+    let queryParams = [];
+    let paramCount = 1;
+
+    if (departmentNameId) {
+      whereConditions.push(`vad.department_name_id = $${paramCount}`);
+      queryParams.push(departmentNameId);
+      paramCount++;
+    }
+
+    if (departmentId) {
+      whereConditions.push(`dn.department_id = $${paramCount}`);
+      queryParams.push(departmentId);
+      paramCount++;
+    }
+
+    if (status) {
+      whereConditions.push(`va.status = $${paramCount}`);
+      queryParams.push(status);
+      paramCount++;
+    }
+
+    const whereClause = whereConditions.length > 0 
+      ? `WHERE ${whereConditions.join(' AND ')}` 
+      : '';
+
+    // Get total count for pagination
+    const countQuery = `
+      SELECT COUNT(DISTINCT va.id) as total
+      FROM volunteer_applications va
+      ${departmentNameId || departmentId ? 'INNER JOIN volunteer_application_departments vad ON va.id = vad.volunteer_application_id' : ''}
+      ${departmentNameId || departmentId ? 'INNER JOIN department_names dn ON vad.department_name_id = dn.id' : ''}
+      ${whereClause}
+    `;
+
+    const countResult = await pool.query(countQuery, queryParams);
+    const totalItems = parseInt(countResult.rows[0].total, 10);
+    const totalPages = Math.ceil(totalItems / limitNum);
+
+    // Build sort clause
+    const sortClause = sortColumn === 'memberName' 
+      ? `m.full_name ${order}` 
+      : `va.created_at ${order}`;
+
+    // Get paginated results
+    const dataQuery = `
+      SELECT DISTINCT ON (va.id)
+        va.id,
+        va.member_id,
+        va.status,
+        va.created_at,
+        va.updated_at,
+        m.full_name as member_name,
+        m.email as member_email,
+        m.phone as member_phone
+      FROM volunteer_applications va
+      INNER JOIN members m ON va.member_id = m.id
+      ${departmentNameId || departmentId ? 'INNER JOIN volunteer_application_departments vad ON va.id = vad.volunteer_application_id' : ''}
+      ${departmentNameId || departmentId ? 'INNER JOIN department_names dn ON vad.department_name_id = dn.id' : ''}
+      ${whereClause}
+      ORDER BY va.id, ${sortClause}
+      LIMIT $${paramCount} OFFSET $${paramCount + 1}
+    `;
+
+    queryParams.push(limitNum, offset);
+    const dataResult = await pool.query(dataQuery, queryParams);
+
+    // Fetch departments for each request
+    const requestsWithDepartments = await Promise.all(
+      dataResult.rows.map(async (request) => {
+        const deptResult = await pool.query(`
+          SELECT 
+            dn.id,
+            dn.department_name,
+            vd.department as department_heading,
+            vd.id as department_heading_id
+          FROM volunteer_application_departments vad
+          INNER JOIN department_names dn ON vad.department_name_id = dn.id
+          INNER JOIN volunteer_departments vd ON dn.department_id = vd.id
+          WHERE vad.volunteer_application_id = $1
+          ORDER BY vd.department, dn.department_name
+        `, [request.id]);
+
+        return {
+          id: request.id,
+          member: {
+            id: request.member_id,
+            name: request.member_name,
+            email: request.member_email,
+            phone: request.member_phone
+          },
+          status: request.status,
+          createdAt: request.created_at,
+          updatedAt: request.updated_at,
+          departments: deptResult.rows.map(d => ({
+            id: d.id,
+            departmentName: d.department_name,
+            departmentHeading: d.department_heading,
+            departmentHeadingId: d.department_heading_id
+          }))
+        };
+      })
+    );
+
+    // Build filters object for response
+    const filters = {};
+    if (departmentNameId) filters.departmentNameId = departmentNameId;
+    if (departmentId) filters.departmentId = departmentId;
+    if (status) filters.status = status;
+
+    res.json({
+      success: true,
+      data: {
+        requests: requestsWithDepartments,
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalItems,
+          itemsPerPage: limitNum,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1
+        },
+        filters
+      }
+    });
+
+  } catch (error) {
+    console.log(error);
+    
+    console.error('Error listing volunteer requests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An unexpected error occurred. Please try again later.',
+      code: 'INTERNAL_SERVER_ERROR'
+    });
+  }
+};
+
+/**
+ * Get single volunteer request details
+ * Admin endpoint - auth required
+ */
+exports.getVolunteerRequestById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request ID format',
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    const result = await pool.query(`
+      SELECT 
+        va.id,
+        va.member_id,
+        va.status,
+        va.created_at,
+        va.updated_at,
+        m.full_name as member_name,
+        m.email as member_email,
+        m.phone as member_phone,
+        m.address as member_address,
+        m.created_at as member_since
+      FROM volunteer_applications va
+      INNER JOIN members m ON va.member_id = m.id
+      WHERE va.id = $1
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Volunteer request not found',
+        code: 'NOT_FOUND'
+      });
+    }
+
+    const request = result.rows[0];
+
+    // Fetch departments
+    const deptResult = await pool.query(`
+      SELECT 
+        dn.id,
+        dn.department_name,
+        dn.department_description,
+        vd.department as department_heading,
+        vd.id as department_heading_id
+      FROM volunteer_application_departments vad
+      INNER JOIN department_names dn ON vad.department_name_id = dn.id
+      INNER JOIN volunteer_departments vd ON dn.department_id = vd.id
+      WHERE vad.volunteer_application_id = $1
+      ORDER BY vd.department, dn.department_name
+    `, [id]);
+
+    res.json({
+      success: true,
+      data: {
+        id: request.id,
+        member: {
+          id: request.member_id,
+          name: request.member_name,
+          email: request.member_email,
+          phone: request.member_phone,
+          address: request.member_address,
+          memberSince: request.member_since
+        },
+        status: request.status,
+        createdAt: request.created_at,
+        updatedAt: request.updated_at,
+        completedAt: request.status === 'completed' ? request.updated_at : null,
+        departments: deptResult.rows.map(d => ({
+          id: d.id,
+          departmentName: d.department_name,
+          departmentHeading: d.department_heading,
+          departmentHeadingId: d.department_heading_id,
+          description: d.department_description
+        }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching volunteer request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An unexpected error occurred. Please try again later.',
+      code: 'INTERNAL_SERVER_ERROR'
+    });
+  }
+};
+
+/**
+ * Update volunteer request status
+ * Admin endpoint - auth required
+ */
+exports.updateVolunteerRequestStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request ID format',
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validate status
+    if (status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status. Only "completed" is allowed.',
+        errors: ['Status must be "completed"'],
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validate notes length if provided
+    if (notes && notes.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Notes are too long. Maximum 1000 characters allowed.',
+        errors: ['Notes must be 1000 characters or less'],
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Check if request exists and get current status
+    const checkResult = await pool.query(`
+      SELECT id, status, member_id
+      FROM volunteer_applications
+      WHERE id = $1
+    `, [id]);
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Volunteer request not found',
+        code: 'NOT_FOUND'
+      });
+    }
+
+    const currentStatus = checkResult.rows[0].status;
+    const memberId = checkResult.rows[0].member_id;
+
+    // Check if already completed
+    if (currentStatus === 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot update status. Request is already completed.',
+        code: 'INVALID_TRANSITION'
+      });
+    }
+
+    // Update status
+    const updateResult = await pool.query(`
+      UPDATE volunteer_applications
+      SET status = 'completed', updated_at = NOW()
+      WHERE id = $1 AND status = 'pending'
+      RETURNING id, status, created_at, updated_at
+    `, [id]);
+
+    if (updateResult.rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Failed to update status. Request may have been modified.',
+        code: 'UPDATE_FAILED'
+      });
+    }
+
+    // Fetch member and department details
+    const detailsResult = await pool.query(`
+      SELECT 
+        m.full_name as member_name,
+        m.email as member_email,
+        json_agg(
+          json_build_object(
+            'departmentName', dn.department_name,
+            'departmentHeading', vd.department
+          )
+        ) as departments
+      FROM members m
+      CROSS JOIN volunteer_applications va
+      LEFT JOIN volunteer_application_departments vad ON va.id = vad.volunteer_application_id
+      LEFT JOIN department_names dn ON vad.department_name_id = dn.id
+      LEFT JOIN volunteer_departments vd ON dn.department_id = vd.id
+      WHERE m.id = $1 AND va.id = $2
+      GROUP BY m.id
+    `, [memberId, id]);
+
+    const updatedRequest = updateResult.rows[0];
+    const details = detailsResult.rows[0];
+
+    res.json({
+      success: true,
+      message: 'Volunteer request status updated successfully',
+      data: {
+        id: updatedRequest.id,
+        member: {
+          id: memberId,
+          name: details.member_name,
+          email: details.member_email
+        },
+        status: updatedRequest.status,
+        createdAt: updatedRequest.created_at,
+        completedAt: updatedRequest.updated_at,
+        notes: notes || null,
+        departments: details.departments.filter(d => d.departmentName !== null)
+      }
+    });
+
+  } catch (error) {
+    console.error('Error updating volunteer request status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An unexpected error occurred. Please try again later.',
+      code: 'INTERNAL_SERVER_ERROR'
+    });
+  }
+};
 

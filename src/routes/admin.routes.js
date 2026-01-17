@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin.controller');
 const auth = require('../middlewares/auth.middleware');
-
+const { adminVolunteerLimiter } = require('../middlewares/rateLimit');
 
 router.post('/login', adminController.login);
 router.post('/event', auth, adminController.createEvent);
@@ -18,4 +18,10 @@ router.get('/attendance/export/:eventId', auth, adminController.exportAttendance
 router.delete('/event/:eventId', auth, adminController.deleteEvent);
 router.get('/baptism-requests', auth, adminController.listBaptismRequests);
 router.patch('/baptism-requests/:requestId/complete', auth, adminController.completeBaptism);
+
+// Volunteer admin routes
+router.get('/volunteer-requests', auth, adminVolunteerLimiter, adminController.listVolunteerRequests);
+router.get('/volunteer-requests/:id', auth, adminVolunteerLimiter, adminController.getVolunteerRequestById);
+router.patch('/volunteer-requests/:id', auth, adminVolunteerLimiter, adminController.updateVolunteerRequestStatus);
+
 module.exports = router;

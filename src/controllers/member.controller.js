@@ -407,3 +407,270 @@ exports.getBaptismRequestStatus = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+exports.getDepartments = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        vd.id,
+        vd.department,
+        json_agg(
+          json_build_object(
+            'id', dn.id,
+            'name', dn.department_name,
+            'description', dn.department_description
+          ) ORDER BY dn.department_name
+        ) as department_names
+      FROM volunteer_departments vd
+      LEFT JOIN department_names dn ON vd.id = dn.department_id
+      GROUP BY vd.id, vd.department
+      ORDER BY vd.department
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        departments: result.rows.map(row => ({
+          id: row.id,
+          department: row.department,
+          departmentNames: row.department_names.filter(d => d.id !== null)
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching departments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An unexpected error occurred. Please try again later.',
+      code: 'INTERNAL_SERVER_ERROR'
+    });
+  }
+};
+
+/**
+ * Get current member's volunteer request status
+ * Member endpoint - auth required
+ */
+exports.getMemberRequestStatus = async (req, res) => {
+  try {
+    const memberId = req.user.memberId;
+
+    // Check for pending request
+    const pendingResult = await pool.query(`
+      SELECT 
+        va.id,
+        va.status,
+        va.created_at,
+        json_agg(
+          json_build_object(
+            'id', dn.id,
+            'departmentName', dn.department_name,
+            'departmentHeading', vd.department,
+            'description', dn.department_description
+          )
+        ) as departments
+      FROM volunteer_applications va
+      LEFT JOIN volunteer_application_departments vad ON va.id = vad.volunteer_application_id
+      LEFT JOIN department_names dn ON vad.department_name_id = dn.id
+      LEFT JOIN volunteer_departments vd ON dn.department_id = vd.id
+      WHERE va.member_id = $1 AND va.status = 'pending'
+      GROUP BY va.id
+      LIMIT 1
+    `, [memberId]);
+
+    if (pendingResult.rows.length > 0) {
+      const request = pendingResult.rows[0];
+      return res.json({
+        success: true,
+        message: 'We have received your request. Status: Pending. Our team will contact you.',
+        data: {
+          hasActiveRequest: true,
+          request: {
+            id: request.id,
+            status: request.status,
+            createdAt: request.created_at,
+            departments: request.departments.filter(d => d.id !== null)
+          }
+        }
+      });
+    }
+
+    // Check for last completed request
+    const completedResult = await pool.query(`
+      SELECT id, status, created_at, updated_at
+      FROM volunteer_applications
+      WHERE member_id = $1 AND status = 'completed'
+      ORDER BY updated_at DESC
+      LIMIT 1
+    `, [memberId]);
+
+    const lastCompletedRequest = completedResult.rows.length > 0 ? {
+      id: completedResult.rows[0].id,
+      status: completedResult.rows[0].status,
+      createdAt: completedResult.rows[0].created_at,
+      completedAt: completedResult.rows[0].updated_at
+    } : null;
+
+    res.json({
+      success: true,
+      message: 'Thank you for your willingness to serve. There are no pending requests.',
+      data: {
+        hasActiveRequest: false,
+        request: null,
+        lastCompletedRequest
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching member request status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An unexpected error occurred. Please try again later.',
+      code: 'INTERNAL_SERVER_ERROR'
+    });
+  }
+};
+
+/**
+ * Submit a new volunteer request
+ * Member endpoint - auth required
+ */
+exports.submitVolunteerRequest = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const memberId = req.user.memberId;
+    const { departmentNameIds } = req.body;
+
+    // Validation
+    if (!Array.isArray(departmentNameIds) || departmentNameIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select at least one department to continue.',
+        errors: ['departmentNameIds must contain at least one valid department'],
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    if (departmentNameIds.length > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'You can select up to 5 departments.',
+        errors: ['Maximum 5 departments can be selected'],
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validate UUIDs format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const invalidUuids = departmentNameIds.filter(id => !uuidRegex.test(id));
+    if (invalidUuids.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid department selection.',
+        errors: ['One or more department IDs are invalid'],
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    await client.query('BEGIN');
+
+    // Check for existing pending request with row lock
+    const existingCheck = await client.query(`
+      SELECT id, status, created_at
+      FROM volunteer_applications
+      WHERE member_id = $1 AND status = 'pending'
+      FOR UPDATE
+    `, [memberId]);
+
+    if (existingCheck.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        success: false,
+        message: 'We have received your request. Status: Pending. Our team will contact you.',
+        data: {
+          existingRequest: {
+            id: existingCheck.rows[0].id,
+            status: existingCheck.rows[0].status,
+            createdAt: existingCheck.rows[0].created_at
+          }
+        }
+      });
+    }
+
+    // Verify all department_name_ids exist
+    const deptCheckResult = await client.query(`
+      SELECT id FROM department_names WHERE id = ANY($1::uuid[])
+    `, [departmentNameIds]);
+
+    if (deptCheckResult.rows.length !== departmentNameIds.length) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: 'One or more selected departments are invalid.',
+        errors: ['Some department IDs do not exist'],
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Create volunteer application
+    const applicationId = uuid();
+    const applicationResult = await client.query(`
+      INSERT INTO volunteer_applications (id, member_id, status, created_at)
+      VALUES ($1, $2, 'pending', NOW())
+      RETURNING id, status, created_at
+    `, [applicationId, memberId]);
+
+    // Insert department selections
+    for (const deptNameId of departmentNameIds) {
+      await client.query(`
+        INSERT INTO volunteer_application_departments 
+          (id, volunteer_application_id, department_name_id)
+        VALUES ($1, $2, $3)
+      `, [uuid(), applicationId, deptNameId]);
+    }
+
+    // Fetch the created application with department details
+    const createdApplication = await client.query(`
+      SELECT 
+        va.id,
+        va.status,
+        va.created_at,
+        json_agg(
+          json_build_object(
+            'id', dn.id,
+            'departmentName', dn.department_name,
+            'departmentHeading', vd.department
+          )
+        ) as departments
+      FROM volunteer_applications va
+      LEFT JOIN volunteer_application_departments vad ON va.id = vad.volunteer_application_id
+      LEFT JOIN department_names dn ON vad.department_name_id = dn.id
+      LEFT JOIN volunteer_departments vd ON dn.department_id = vd.id
+      WHERE va.id = $1
+      GROUP BY va.id
+    `, [applicationId]);
+
+    await client.query('COMMIT');
+
+    res.status(201).json({
+      success: true,
+      message: 'Thank you for your willingness to serve! We have received your volunteer request and our team will contact you soon.',
+      data: {
+        id: createdApplication.rows[0].id,
+        status: createdApplication.rows[0].status,
+        createdAt: createdApplication.rows[0].created_at,
+        departments: createdApplication.rows[0].departments.filter(d => d.id !== null)
+      }
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error submitting volunteer request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An unexpected error occurred. Please try again later.',
+      code: 'INTERNAL_SERVER_ERROR'
+    });
+  } finally {
+    client.release();
+  }
+};

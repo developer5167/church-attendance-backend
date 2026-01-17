@@ -26,3 +26,39 @@ exports.submitLimiter = rateLimit({
     message: 'Too many submissions.',
   },
 });
+
+// Volunteer submission — strict
+exports.volunteerSubmitLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // Max 3 attempts per hour
+  message: {
+    success: false,
+    message: 'Too many submission attempts. Please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Volunteer status check — relaxed
+exports.volunteerStatusLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // Max 30 requests per minute
+  message: {
+    success: false,
+    message: 'Too many requests. Please slow down.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Admin volunteer endpoints — moderate
+exports.adminVolunteerLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // Max 100 requests per minute
+  message: {
+    success: false,
+    message: 'Too many requests. Please slow down.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
