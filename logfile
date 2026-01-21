@@ -1299,3 +1299,8 @@
 	      WHERE id = $1 AND status = 'pending'
 	      RETURNING id, status, created_at, updated_at
 	    
+2026-01-17 22:31:26.976 IST [2382] LOG:  received fast shutdown request
+2026-01-17 22:31:26.977 IST [2382] LOG:  aborting any active transactions
+2026-01-17 22:31:26.979 IST [2382] LOG:  background worker "logical replication launcher" (PID 2389) exited with exit code 1
+2026-01-17 22:31:26.979 IST [2384] LOG:  shutting down
+2026-01-17 22:31:26.990 IST [2382] LOG:  database system is shut down
